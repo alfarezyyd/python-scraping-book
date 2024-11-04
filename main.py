@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
+from google.cloud import storage
 
 # 1. Extract: Mengambil data dari halaman web
 def extract_data(url):
@@ -41,13 +42,23 @@ def transform_data(data):
     
     return df
 
-# 3. Load: Memuat data ke dalam file CSV
-def load_data(df, filename='books.csv'):
-    df.to_csv(filename, index=False)
-    print(f"Data saved to {filename}")
+# 3. Load: Memuat data ke dalam file CSV dan meng-upload ke Google Cloud Storage
+def load_data_and_upload(df, bucket_name, filename='books.csv'):
+    # Menyimpan CSV secara lokal
+    local_file_path = filename
+    df.to_csv(local_file_path, index=False)
+    print(f"Data saved locally as {local_file_path}")
+
+    # Meng-upload ke Google Cloud Storage
+    client = storage.Client()
+    bucket = client.bucket(bucket_name)
+    blob = bucket.blob(filename)
+    
+    blob.upload_from_filename(local_file_path)
+    print(f"Data uploaded to bucket {bucket_name} as {filename}")
 
 # Main ETL function
-def run_etl(url):
+def run_etl(url, bucket_name):
     print("Starting ETL process...")
     
     # Extract
@@ -58,10 +69,13 @@ def run_etl(url):
     df = transform_data(data)
     print("Data transformed")
     
-    # Load
-    load_data(df)
+    # Load and upload
+    load_data_and_upload(df, bucket_name)
     print("ETL process completed")
 
 # URL dari halaman Books to Scrape
 url = 'http://books.toscrape.com/'
-run_etl(url)
+
+# Ganti dengan nama bucket Anda
+bucket_name = 'suara-nusa-dev-labs-ml-test-1'  # Misalnya, 'my-bucket'
+run_etl(url, bucket_name)
