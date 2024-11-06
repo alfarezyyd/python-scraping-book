@@ -1,10 +1,7 @@
-from flask import Flask, jsonify
 import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from google.cloud import storage
-
-app = Flask(__name__)
 
 # 1. Extract: Mengambil data dari halaman web
 def extract_data(url):
@@ -40,17 +37,24 @@ def load_data_and_upload(df, bucket_name, filename='books.csv'):
     blob = bucket.blob(filename)
     blob.upload_from_filename(local_file_path)
 
-# Endpoint untuk menjalankan ETL
-@app.route('/run_etl', methods=['POST'])
+# Main ETL function
 def run_etl():
     url = 'http://books.toscrape.com/'
     bucket_name = 'suara-nusa-dev-labs-ml-test-1'
+    
+    # Extract
     data = extract_data(url)
     if not data:
-        return jsonify({'message': 'No data extracted'}), 500
+        print("No data extracted")
+        return
+
+    # Transform
     df = transform_data(data)
+    print("Data transformed successfully")
+
+    # Load and upload to Google Cloud Storage
     load_data_and_upload(df, bucket_name)
-    return jsonify({'message': 'ETL process completed successfully'}), 200
+    print("ETL process completed and data uploaded to Google Cloud Storage")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    run_etl()

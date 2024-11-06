@@ -1,18 +1,16 @@
-# Gunakan image Python
+# Gunakan image Python 3.9 sebagai base image
 FROM python:3.9-slim
 
-# Set working directory
+# Set working directory di dalam kontainer
 WORKDIR /app
 
-# Salin requirements.txt dan install dependencies
+# Salin file requirements.txt dan install dependencies
 COPY requirements.txt .
+
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Salin file utama
-COPY main.py .
+# Salin seluruh file proyek (termasuk skrip Python Anda)
+COPY . .
 
-# Tetapkan FLASK_APP ke main.py
-ENV FLASK_APP=main.py
-
-# Jalankan aplikasi Flask
-CMD ["flask", "run", "--host=0.0.0.0", "--port=8080"]
+# Jalankan skrip Python saat kontainer dijalankan
+CMD ["python", "main.py"]
